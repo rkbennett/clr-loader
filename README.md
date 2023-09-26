@@ -8,4 +8,8 @@
 Implements a generic interface for loading one of the CLR (.NET) runtime
 implementations and calling simple functions on them.
 
+## Updates
+
+This version has been modified so that the clrloader dll is a managed assembly instead of a mix-mode assembly. This was done to work with another project I have called [pyclrhost](https://github.com/rkbennett/pyclrhost) so that this package could be imported from memory.
+
 Documentation is available at https://pythonnet.github.io/clr-loader/.
