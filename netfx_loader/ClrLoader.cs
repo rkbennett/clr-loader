@@ -11,7 +11,6 @@ namespace ClrLoader
         static bool _initialized = false;
         static List<DomainData> _domains = new List<DomainData>();
 
-        [DllExport("pyclr_initialize", CallingConvention.Cdecl)]
         public static void Initialize()
         {
             if (!_initialized)
@@ -21,7 +20,6 @@ namespace ClrLoader
             }
         }
 
-        [DllExport("pyclr_create_appdomain", CallingConvention.Cdecl)]
         public static IntPtr CreateAppDomain(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string name,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string configFile
@@ -35,7 +33,6 @@ namespace ClrLoader
                     ApplicationBase = AppDomain.CurrentDomain.BaseDirectory,
                     ConfigurationFile = configFile
                 };
-                Print($"Base: {AppDomain.CurrentDomain.BaseDirectory}");
                 var domain = AppDomain.CreateDomain(name, null, setup);
 
                 Print($"Located domain {domain}");
@@ -50,10 +47,9 @@ namespace ClrLoader
             }
         }
 
-        [DllExport("pyclr_get_function", CallingConvention.Cdecl)]
         public static IntPtr GetFunction(
-            IntPtr domain,
-            [MarshalAs(UnmanagedType.LPUTF8Str)] string assemblyPath,
+            [MarshalAs(UnmanagedType.SysInt)] int domain,
+            [MarshalAs(UnmanagedType.SafeArray, SafeArraySubType=VarEnum.VT_UI1)] byte[] assemblyPath,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string typeName,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string function
         )
@@ -66,15 +62,15 @@ namespace ClrLoader
             }
             catch (Exception exc)
             {
+                Console.WriteLine($"Exception in {nameof(GetFunction)}: {exc.GetType().Name} {exc.Message}\n{exc.StackTrace}");
                 Print($"Exception in {nameof(GetFunction)}: {exc.GetType().Name} {exc.Message}\n{exc.StackTrace}");
                 return IntPtr.Zero;
             }
         }
 
-        [DllExport("pyclr_close_appdomain", CallingConvention.Cdecl)]
-        public static void CloseAppDomain(IntPtr domain)
+        public static void CloseAppDomain([MarshalAs(UnmanagedType.SysInt)] int domain)
         {
-            if (domain != IntPtr.Zero)
+            if (domain != 0)
             {
                 try
                 {
@@ -83,12 +79,12 @@ namespace ClrLoader
                 }
                 catch (Exception exc)
                 {
+                    Console.WriteLine($"Exception in {nameof(CloseAppDomain)}: {exc.GetType().Name} {exc.Message}\n{exc.StackTrace}");
                     Print($"Exception in {nameof(CloseAppDomain)}: {exc.GetType().Name} {exc.Message}\n{exc.StackTrace}");
                 }
             }
         }
 
-        [DllExport("pyclr_finalize", CallingConvention.Cdecl)]
         public static void Close()
         {
             foreach (var domainData in _domains)
